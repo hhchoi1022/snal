@@ -1,0 +1,7 @@
+
+# Excluded data/image/text files
+*.json
+*.png
+*.ascii
+*.dict
+*.dat

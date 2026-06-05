@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SMAL"
+version = "0.1.0"
+description = "SuperNova AnaLysis tool"
+authors = [{name="Your Name", email="you@example.com"}]
+dependencies = [
+    # "numpy",
+    # "astropy",
+]
