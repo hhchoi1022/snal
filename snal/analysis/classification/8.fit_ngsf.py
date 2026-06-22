@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import astropy.units as u
 import gc
 matplotlib.use("Agg")
-
 #%%
 def make_json_serializable(obj):
     if isinstance(obj, u.Quantity):
@@ -37,6 +36,7 @@ def make_json_serializable(obj):
         return [make_json_serializable(v) for v in obj]
 
     return obj
+
 
 #%%
 medium_filterset_0 = [
@@ -216,7 +216,10 @@ def make_synphot_files_for_obj(target_dir, pyphot_filters):
                 print(f"[SKIP] Missing spectrum: {spec_path}")
                 continue
 
-            spec_data = ascii.read(spec_path)
+            spec_data = ascii.read(spec_path, comment = '#')
+            colnames = spec_data.colnames
+            spec_data['col1'] = spec_data[colnames[0]]
+            spec_data['col2'] = spec_data[colnames[1]]
 
             spec = Spectrum(
                 wavelength=spec_data['col1'],
@@ -271,7 +274,7 @@ def make_synphot_files_for_obj(target_dir, pyphot_filters):
 
         except Exception as e:
             print(f"[ERROR] {objname} / {ascii_file}: {e}")
-            continue
+            break
 
     # metadata도 version 붙이지 않음
     out_meta_path = obj_save_dir / 'wiserep_spectra.csv'
@@ -299,6 +302,13 @@ def process_single(original_path):
 
             if not medium_path.exists():
                 print(f"[SKIP] Missing medium file: {medium_path}")
+                continue
+
+            result_png_path = medium_path.with_name(
+                medium_path.stem + f"_fit_{version}.png"
+            )
+            if result_png_path.exists():
+                # print(f"[SKIP] Already processed: {result_png_path}")
                 continue
 
             classifier = AlertClassifier()
@@ -346,7 +356,6 @@ def process_single_raw(task):
     except Exception as e:
         print(f"Error with task {task}: {e}")
         return None
-
 #%% Run in multiprocessing
 if __name__ == '__main__':
     from tqdm import tqdm
@@ -363,7 +372,7 @@ if __name__ == '__main__':
     print(f"Total original spectra for NGSF: {len(all_original_synphot_paths)}")
 
     n_tasks = len(all_original_synphot_paths)
-    batch_size = 128
+    batch_size = n_tasks
     max_workers = 64
 
     for start in range(0, n_tasks, batch_size):
